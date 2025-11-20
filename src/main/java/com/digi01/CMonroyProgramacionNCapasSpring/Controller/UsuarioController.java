@@ -1,6 +1,5 @@
 package com.digi01.CMonroyProgramacionNCapasSpring.Controller;
 
-
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Direccion;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.ErrorCarga;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Pais;
@@ -28,6 +27,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -40,13 +43,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("usuario")
 public class UsuarioController {
-
 
 //    @GetMapping("estado/{idPais}")
 //    @ResponseBody //Retorna dato Estucturado
@@ -65,6 +68,26 @@ public class UsuarioController {
 //    public Result GetColoniasByIdMunicipio(@PathVariable("idMunicipio") int idMunicipio) {
 //        return coloniaDAOImplementation.GetByIdMunicipio(idMunicipio);
 //    }
+    private static final String urlBase = "http://localhost:8080";
+
+    @GetMapping()
+    public String Index(Model model) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Result<List<Usuario>>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Usuario>>>() {
+        });
+
+        if (responseEntity.getStatusCode().value() == 200) {
+            Result result = responseEntity.getBody();
+            model.addAttribute("usuarios", result.object);
+
+        }
+
+        return "UsuarioIndex";
+    }
 
 //    @GetMapping()
 //    public String Index(Model model) {
@@ -78,7 +101,20 @@ public class UsuarioController {
 //        model.addAttribute("usuariosBusqueda", new Usuario());
 //        return "UsuarioIndex";
 //    }
-
+    
+    
+    //@PostMapping()
+//    public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
+//        List<Usuario> result = usuarioService.GetAllDinamico(usuario);
+//        //Result result = usuarioDAOImplementation.GetAllDinamico(usuario);
+//
+//        model.addAttribute("usuarios", result);
+//        model.addAttribute("roles", rolDAOImplementation.GetAll().objects);
+//        model.addAttribute("usuariosBusqueda", usuario);
+//
+//        return "UsuarioIndex";
+//    }
+    
 //    @GetMapping("add")
 //    public String Add(Model model) {
 //        model.addAttribute("Usuario", new Usuario());
@@ -332,17 +368,7 @@ public class UsuarioController {
 //        return "redirect:/usuario/" + IdUsuario;
 //    }
 //
-//    @PostMapping()
-//    public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
-//        List<Usuario> result = usuarioService.GetAllDinamico(usuario);
-//        //Result result = usuarioDAOImplementation.GetAllDinamico(usuario);
-//
-//        model.addAttribute("usuarios", result);
-//        model.addAttribute("roles", rolDAOImplementation.GetAll().objects);
-//        model.addAttribute("usuariosBusqueda", usuario);
-//
-//        return "UsuarioIndex";
-//    }
+//    
 //
 //    public List<Usuario> LecturaArchivoTXT(File archivo) {
 //
