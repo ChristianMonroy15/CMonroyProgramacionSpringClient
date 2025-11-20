@@ -80,9 +80,19 @@ public class UsuarioController {
                 new ParameterizedTypeReference<Result<List<Usuario>>>() {
         });
 
+        ResponseEntity<Result<List<Rol>>> responseEntityrol = restTemplate.exchange(urlBase + "/api/usuario/rol",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Rol>>>() {
+        });
+
         if (responseEntity.getStatusCode().value() == 200) {
             Result result = responseEntity.getBody();
             model.addAttribute("usuarios", result.object);
+            model.addAttribute("usuariosBusqueda", new Usuario());
+
+            Result resultRol = responseEntityrol.getBody();
+            model.addAttribute("roles", resultRol.object);
 
         }
 
@@ -101,8 +111,35 @@ public class UsuarioController {
 //        model.addAttribute("usuariosBusqueda", new Usuario());
 //        return "UsuarioIndex";
 //    }
-    
-    
+    @PostMapping()
+    public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
+        RestTemplate restTemplate = new RestTemplate();
+        
+        HttpEntity<Usuario> entity = new HttpEntity<>(usuario);
+        
+        ResponseEntity<Result<List<Usuario>>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/busqueda",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Result<List<Usuario>>>(){
+        });
+
+        ResponseEntity<Result<List<Rol>>> responseEntityrol = restTemplate.exchange(urlBase + "/api/usuario/rol",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Rol>>>() {
+        });
+
+        if (responseEntity.getStatusCode().value() == 200) {
+            Result result = (Result) responseEntity.getBody();
+            Result resultRol = responseEntityrol.getBody();
+            model.addAttribute("roles", resultRol.object);
+            model.addAttribute("usuarios", result.object);
+            model.addAttribute("usuariosBusqueda", new Usuario());
+
+        }
+        return "UsuarioIndex";
+    }
+
     //@PostMapping()
 //    public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
 //        List<Usuario> result = usuarioService.GetAllDinamico(usuario);
@@ -114,7 +151,6 @@ public class UsuarioController {
 //
 //        return "UsuarioIndex";
 //    }
-    
 //    @GetMapping("add")
 //    public String Add(Model model) {
 //        model.addAttribute("Usuario", new Usuario());
