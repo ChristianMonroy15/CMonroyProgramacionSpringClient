@@ -80,10 +80,16 @@ public class UsuarioController {
                 new ParameterizedTypeReference<Result<List<Usuario>>>() {
         });
 
-        ResponseEntity<Result<List<Rol>>> responseEntityrol = restTemplate.exchange(urlBase + "/api/usuario/rol",
+        ResponseEntity<Result<List<Rol>>> responseEntityRol = restTemplate.exchange(urlBase + "/api/usuario/rol",
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<Result<List<Rol>>>() {
+        });
+
+        ResponseEntity<Result<List<Pais>>> responseEntityPais = restTemplate.exchange(urlBase + "/api/pais",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Pais>>>() {
         });
 
         if (responseEntity.getStatusCode().value() == 200) {
@@ -91,8 +97,11 @@ public class UsuarioController {
             model.addAttribute("usuarios", result.object);
             model.addAttribute("usuariosBusqueda", new Usuario());
 
-            Result resultRol = responseEntityrol.getBody();
+            Result resultRol = responseEntityRol.getBody();
             model.addAttribute("roles", resultRol.object);
+
+            Result resultPais = responseEntityPais.getBody();
+            model.addAttribute("paises", resultPais.object);
 
         }
 
@@ -114,13 +123,13 @@ public class UsuarioController {
     @PostMapping()
     public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
         RestTemplate restTemplate = new RestTemplate();
-        
+
         HttpEntity<Usuario> entity = new HttpEntity<>(usuario);
-        
+
         ResponseEntity<Result<List<Usuario>>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/busqueda",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<Result<List<Usuario>>>(){
+                new ParameterizedTypeReference<Result<List<Usuario>>>() {
         });
 
         ResponseEntity<Result<List<Rol>>> responseEntityrol = restTemplate.exchange(urlBase + "/api/usuario/rol",
@@ -151,6 +160,40 @@ public class UsuarioController {
 //
 //        return "UsuarioIndex";
 //    }
+    @GetMapping("add")
+    public String Add(Model model) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<List<Rol>>> responseEntityRol = restTemplate.exchange(urlBase + "/api/usuario/rol",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Rol>>>() {
+        });
+
+        ResponseEntity<Result<List<Pais>>> responseEntityPais = restTemplate.exchange(urlBase + "/api/pais",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Pais>>>() {
+        });
+
+        if (responseEntityRol.getStatusCode().value() == 200) {
+
+            Result resultRol = responseEntityRol.getBody();
+            model.addAttribute("roles", resultRol.object);
+
+        }
+
+        if (responseEntityPais.getStatusCode().value() == 200) {
+            Result resultPais = responseEntityPais.getBody();
+            model.addAttribute("paises", resultPais.object);
+        }
+
+        model.addAttribute("Usuario", new Usuario());
+
+        return "UsuarioForm";
+
+    }
+
 //    @GetMapping("add")
 //    public String Add(Model model) {
 //        model.addAttribute("Usuario", new Usuario());
@@ -159,6 +202,47 @@ public class UsuarioController {
 //        return "UsuarioForm";
 //    }
 //
+    @GetMapping("{detail}")
+    public String Detail(@PathVariable("detail") int idUsuario,
+            Model model) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/"+idUsuario,
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        });
+
+        ResponseEntity<Result<List<Rol>>> responseEntityRol = restTemplate.exchange(urlBase + "/api/usuario/rol",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Rol>>>() {
+        });
+
+        ResponseEntity<Result<List<Pais>>> responseEntityPais = restTemplate.exchange(urlBase + "/api/pais",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<List<Pais>>>() {
+        });
+
+        if (responseEntityRol.getStatusCode().value() == 200) {
+
+            Result resultRol = responseEntityRol.getBody();
+            model.addAttribute("roles", resultRol.object);
+
+        }
+
+        if (responseEntityPais.getStatusCode().value() == 200) {
+            Result resultPais = responseEntityPais.getBody();
+            model.addAttribute("paises", resultPais.object);
+        }
+
+        model.addAttribute("usuario", responseEntity.getBody().object);
+//        model.addAttribute("Direccion", new Direccion());
+        
+        return "UsuarioDetail";
+    }
+
 //    @GetMapping("{detail}")
 //    public String Detail(@PathVariable("detail") int detail, Model model) {
 //

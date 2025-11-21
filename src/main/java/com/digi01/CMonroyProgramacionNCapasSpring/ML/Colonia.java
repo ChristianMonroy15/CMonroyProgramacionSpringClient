@@ -1,6 +1,8 @@
 
 package com.digi01.CMonroyProgramacionNCapasSpring.ML;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 public class Colonia {
     
@@ -8,6 +10,7 @@ public class Colonia {
     private String Nombre;
     private String CodigoPostal;
     
+    @JsonProperty("MunicipioJPA")
     public Municipio Municipio;
     
     public void setIdColonia(int IdColonia){

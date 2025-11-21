@@ -1,12 +1,15 @@
 
 package com.digi01.CMonroyProgramacionNCapasSpring.ML;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 public class Estado {
     
     private int IdEstado;
     private String Nombre;
     
+    @JsonProperty("PaisJPA")
     public Pais Pais;
     
     public void setIdEstado(int IdEstado){

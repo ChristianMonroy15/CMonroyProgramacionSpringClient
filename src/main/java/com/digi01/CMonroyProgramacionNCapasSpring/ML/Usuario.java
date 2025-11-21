@@ -1,5 +1,6 @@
 package com.digi01.CMonroyProgramacionNCapasSpring.ML;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -60,6 +61,7 @@ public class Usuario {
     @Valid
     public Rol Rol;
 
+    @JsonProperty("DireccionesJPA")
     public List<Direccion> Direcciones;
 
     public Usuario() {

@@ -1,5 +1,7 @@
 package com.digi01.CMonroyProgramacionNCapasSpring.ML;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Direccion {
 
     private int IdDireccion;
@@ -7,6 +9,7 @@ public class Direccion {
     private String NumeroInterior;
     private String NumeroExterior;
 
+    @JsonProperty("ColoniaJPA")
     public Colonia Colonia;
     public Usuario Usuario;
 
