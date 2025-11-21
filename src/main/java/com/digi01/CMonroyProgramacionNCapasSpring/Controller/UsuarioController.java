@@ -207,7 +207,7 @@ public class UsuarioController {
             Model model) {
         RestTemplate restTemplate = new RestTemplate();
 
-        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/"+idUsuario,
+        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/" + idUsuario,
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<Result<Usuario>>() {
@@ -239,7 +239,7 @@ public class UsuarioController {
 
         model.addAttribute("usuario", responseEntity.getBody().object);
 //        model.addAttribute("Direccion", new Direccion());
-        
+
         return "UsuarioDetail";
     }
 
@@ -256,16 +256,26 @@ public class UsuarioController {
 //
 //        return "UsuarioDetail";
 //    }
-//
-//    @GetMapping("/direccion/{idDireccion}")
-//    @ResponseBody
-//    public Direccion getDireccion(@PathVariable int idDireccion) {
-//        
-//        return direccionService.GetById(idDireccion);
-//        //return (Direccion) direccionDAOImplementation.GetById(idDireccion).object;
-//    }
-//
-//    @GetMapping("deleteUsuario/{idUsuario}")
+    
+    @GetMapping("deleteUsuario/{idUsuario}")
+    public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
+                Model model,
+                RedirectAttributes redirectAttributes){
+        
+        RestTemplate restTemplate = new RestTemplate();
+        
+        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/" + idUsuario,
+                HttpMethod.DELETE,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        });
+        
+        redirectAttributes.addFlashAttribute("resultDelete", responseEntity.getBody());
+        
+        return "redirect:/usuario";
+    }
+    
+    //    @GetMapping("deleteUsuario/{idUsuario}")
 //    public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
 //            Model model,
 //            RedirectAttributes redirectAttributes) {
@@ -276,6 +286,16 @@ public class UsuarioController {
 //        redirectAttributes.addFlashAttribute("resultDelete", result);
 //        return "redirect:/usuario";
 //    }
+//
+    
+//    @GetMapping("/direccion/{idDireccion}")
+//    @ResponseBody
+//    public Direccion getDireccion(@PathVariable int idDireccion) {
+//        
+//        return direccionService.GetById(idDireccion);
+//        //return (Direccion) direccionDAOImplementation.GetById(idDireccion).object;
+//    }
+//
 //
 //    @PostMapping("addDireccion/{idUsuario}")
 //    public String AddDireccion(@ModelAttribute("Direccion") Direccion direccion,
