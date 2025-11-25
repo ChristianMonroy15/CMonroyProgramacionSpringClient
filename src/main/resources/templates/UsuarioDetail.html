@@ -508,10 +508,10 @@
             }
 
             $.ajax({
-            url: "/usuario/imagen/update",
-                    type: "POST",
+            url: "http://localhost:8080/api/usuario/imagen/update/" + [[${usuario.IdUsuario}]],
+                    type: "PATCH",
+                    contentType: "application/x-www-form-urlencoded",
                     data: {
-                    idUsuario: [[${usuario.IdUsuario}]],
                             imagen: imagenBase64
                     },
                     success: function (data) {
@@ -530,8 +530,6 @@
             });
             }
         </script>
-
-
 
 
 
