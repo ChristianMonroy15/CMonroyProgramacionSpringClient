@@ -1,7 +1,10 @@
 package com.digi01.CMonroyProgramacionNCapasSpring.Controller;
 
+import com.digi01.CMonroyProgramacionNCapasSpring.ML.Colonia;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Direccion;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.ErrorCarga;
+import com.digi01.CMonroyProgramacionNCapasSpring.ML.Estado;
+import com.digi01.CMonroyProgramacionNCapasSpring.ML.Municipio;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Pais;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Result;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Rol;
@@ -50,6 +53,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("usuario")
 public class UsuarioController {
+
+    
 
 //    @GetMapping("estado/{idPais}")
 //    @ResponseBody //Retorna dato Estucturado
@@ -238,7 +243,7 @@ public class UsuarioController {
         }
 
         model.addAttribute("usuario", responseEntity.getBody().object);
-//        model.addAttribute("Direccion", new Direccion());
+        model.addAttribute("Direccion", new Direccion());
 
         return "UsuarioDetail";
     }
@@ -256,25 +261,24 @@ public class UsuarioController {
 //
 //        return "UsuarioDetail";
 //    }
-    
     @GetMapping("deleteUsuario/{idUsuario}")
     public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
-                Model model,
-                RedirectAttributes redirectAttributes){
-        
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
         RestTemplate restTemplate = new RestTemplate();
-        
+
         ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/" + idUsuario,
                 HttpMethod.DELETE,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<Result<Usuario>>() {
         });
-        
+
         redirectAttributes.addFlashAttribute("resultDelete", responseEntity.getBody());
-        
+
         return "redirect:/usuario";
     }
-    
+
     //    @GetMapping("deleteUsuario/{idUsuario}")
 //    public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
 //            Model model,
@@ -286,8 +290,20 @@ public class UsuarioController {
 //        redirectAttributes.addFlashAttribute("resultDelete", result);
 //        return "redirect:/usuario";
 //    }
+    @GetMapping("direccion/{idDirecion}")
+    @ResponseBody
+    public Direccion getDireccion(@PathVariable int idDireccion) {
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Result<Direccion>> responseEntity = restTemplate.exchange(urlBase + "api/direccion/" + idDireccion,
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<Direccion>>() {
+        });
+
+        return responseEntity.getBody().object;
+    }
+
 //
-    
 //    @GetMapping("/direccion/{idDireccion}")
 //    @ResponseBody
 //    public Direccion getDireccion(@PathVariable int idDireccion) {
@@ -296,7 +312,60 @@ public class UsuarioController {
 //        //return (Direccion) direccionDAOImplementation.GetById(idDireccion).object;
 //    }
 //
-//
+//}
+    @PostMapping("addDireccion/{idUsuario}")
+    public String AddDireccion(@ModelAttribute("Direccion") Direccion direccion,
+            @PathVariable("idUsuario") int idUsuario,
+            RedirectAttributes redirectAttributes) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        Result<Direccion> result;
+
+        if (direccion.getIdDireccion() > 0) {
+
+            HttpEntity<Direccion> request = new HttpEntity<>(direccion);
+
+            ResponseEntity<Result<Direccion>> response = restTemplate.exchange(
+                    urlBase + "/api/direccion/usuario/" + idUsuario,
+                    HttpMethod.PUT,
+                    request,
+                    new ParameterizedTypeReference<Result<Direccion>>() {
+            }
+            );
+
+            result = response.getBody();
+
+            if (result.correct) {
+                redirectAttributes.addFlashAttribute("successMessage", "Se actualizó la dirección correctamente");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "No se pudo actualizar la dirección");
+            }
+
+        } else {
+
+            HttpEntity<Direccion> request = new HttpEntity<>(direccion);
+
+            ResponseEntity<Result<Direccion>> response = restTemplate.exchange(
+                    urlBase + "/api/direccion/" + idUsuario,
+                    HttpMethod.POST,
+                    request,
+                    new ParameterizedTypeReference<Result<Direccion>>() {
+            }
+            );
+
+            result = response.getBody();
+
+            if (result.correct) {
+                redirectAttributes.addFlashAttribute("successMessage", "Se agregó la dirección correctamente");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "No se pudo agregar la dirección");
+            }
+        }
+
+        return "redirect:/usuario/" + idUsuario;
+    }
+
 //    @PostMapping("addDireccion/{idUsuario}")
 //    public String AddDireccion(@ModelAttribute("Direccion") Direccion direccion,
 //            Model model,
@@ -424,6 +493,27 @@ public class UsuarioController {
 //        return "redirect:/usuario/" + idUsuario;
 //    }
 //
+    @PostMapping("/detail")
+    public String UpdateUsuario(@ModelAttribute("usuario") Usuario usuario,
+            RedirectAttributes redirectAttributes) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<Usuario> request = new HttpEntity<>(usuario);
+        
+        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/" + usuario.getIdUsuario(),
+                HttpMethod.PUT,
+                request,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        });
+
+        if (responseEntity.getBody().correct == true) {
+            redirectAttributes.addFlashAttribute("successMessage", "Se actualizo la informacion del usuario " + usuario.getUsername());
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "No actualizo la informacion del usuario " + usuario.getUsername());
+        }
+
+        return "redirect:/usuario/" + usuario.getIdUsuario();
+    }
+
 //    @PostMapping("/detail")
 //    public String UpdateUsuario(@ModelAttribute("usuario") Usuario usuario,
 //            RedirectAttributes redirectAttributes) {
@@ -440,6 +530,118 @@ public class UsuarioController {
 //        return "redirect:/usuario/" + usuario.getIdUsuario();
 //    }
 //
+    @PostMapping("add")
+    public String Add(@Valid @ModelAttribute("Usuario") Usuario usuario,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes,
+            @RequestParam("imagenFile") MultipartFile imagenFile) {
+
+        if (bindingResult.hasErrors()) {
+
+            RestTemplate restTemplate = new RestTemplate();
+
+            ResponseEntity<Result<List<Rol>>> responseRol = restTemplate.exchange(
+                    urlBase + "/api/usuario/rol",
+                    HttpMethod.GET,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Result<List<Rol>>>() {
+            }
+            );
+            model.addAttribute("roles", responseRol.getBody().object);
+
+            ResponseEntity<Result<List<Pais>>> responsePais = restTemplate.exchange(
+                    urlBase + "/api/pais",
+                    HttpMethod.GET,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Result<List<Pais>>>() {
+            }
+            );
+            model.addAttribute("paises", responsePais.getBody().object);
+
+            if (usuario.getDirecciones().get(0).getColonia().getMunicipio().getEstado().getPais().getIdPais() > 0) {
+
+                ResponseEntity<Result<List<Estado>>> responseEstado = restTemplate.exchange(
+                        urlBase + "/api/estado/pais/"
+                        + usuario.getDirecciones().get(0).getColonia().getMunicipio().getEstado().getPais().getIdPais(),
+                        HttpMethod.GET,
+                        HttpEntity.EMPTY,
+                        new ParameterizedTypeReference<Result<List<Estado>>>() {
+                }
+                );
+                model.addAttribute("estados", responseEstado.getBody().object);
+
+                if (usuario.getDirecciones().get(0).getColonia().getMunicipio().getEstado().getIdEstado() > 0) {
+
+                    ResponseEntity<Result<List<Municipio>>> responseMun = restTemplate.exchange(
+                            urlBase + "/api/municipio/estado/"
+                            + usuario.getDirecciones().get(0).getColonia().getMunicipio().getEstado().getIdEstado(),
+                            HttpMethod.GET,
+                            HttpEntity.EMPTY,
+                            new ParameterizedTypeReference<Result<List<Municipio>>>() {
+                    }
+                    );
+                    model.addAttribute("municipios", responseMun.getBody().object);
+
+                    if (usuario.getDirecciones().get(0).getColonia().getMunicipio().getIdMunicipio() > 0) {
+
+                        ResponseEntity<Result<List<Colonia>>> responseCol = restTemplate.exchange(
+                                urlBase + "/api/colonia/municipio/"
+                                + usuario.getDirecciones().get(0).getColonia().getMunicipio().getIdMunicipio(),
+                                HttpMethod.GET,
+                                HttpEntity.EMPTY,
+                                new ParameterizedTypeReference<Result<List<Colonia>>>() {
+                        }
+                        );
+                        model.addAttribute("colonias", responseCol.getBody().object);
+                    }
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("errorMessageAdd",
+                    "Revisa que los campos sean válidos y estén completos");
+
+            model.addAttribute("Usuario", usuario);
+            return "UsuarioForm";
+        }
+
+        if (imagenFile != null && !imagenFile.isEmpty()) {
+            try {
+                String ext = imagenFile.getOriginalFilename()
+                        .substring(imagenFile.getOriginalFilename().lastIndexOf(".") + 1);
+
+                if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg")) {
+                    usuario.setImagen(Base64.getEncoder().encodeToString(imagenFile.getBytes()));
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpEntity<Usuario> requestEntity = new HttpEntity<>(usuario);
+
+        ResponseEntity<Result<Usuario>> response = restTemplate.exchange(
+                urlBase + "/api/usuario",
+                HttpMethod.POST,
+                requestEntity,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        }
+        );
+
+        Result<Usuario> result = response.getBody();
+
+        if (result.correct) {
+            redirectAttributes.addFlashAttribute("successMessageAdd",
+                    "El usuario " + usuario.getUsername() + " se creó con éxito.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessageAdd",
+                    "Ocurrió un error al crear el usuario.");
+        }
+
+        return "redirect:/usuario";
+    }
+
 //    @PostMapping("add")
 //    public String Add(@Valid @ModelAttribute("Usuario") Usuario usuario,
 //            BindingResult bindingResult,
@@ -496,6 +698,34 @@ public class UsuarioController {
 //        redirectAttributes.addFlashAttribute("successMessageAdd", "El usuario " + usuario.getUsername() + "se creo con exito.");
 //        return "redirect:/usuario";
 //    }
+    @PostMapping("deleteDireccion")
+    public String DeleteDireccion(@RequestParam("IdDireccion") int idDireccion,
+            @RequestParam("IdUsuario") int idUsuario,
+            RedirectAttributes redirectAttributes) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<Direccion>> responseEntity = restTemplate.exchange(
+                urlBase + "/api/direccion/" + idDireccion,
+                HttpMethod.DELETE,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result<Direccion>>() {
+        }
+        );
+
+        Result<Direccion> result = responseEntity.getBody();
+
+        if (result.correct) {
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "La dirección se eliminó correctamente.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "No se pudo eliminar la dirección.");
+        }
+
+        return "redirect:/usuario/" + idUsuario;
+    }
+
 //
 //    @PostMapping("deleteDireccion")
 //    public String DeleteDireccion(int IdDireccion,

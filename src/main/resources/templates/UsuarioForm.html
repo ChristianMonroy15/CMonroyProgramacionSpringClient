@@ -274,89 +274,60 @@
                         }
                     }))
             });
-            $("#ddlpais").change(function () {
-                $.ajax({
-                    type: 'GET',
-                    url: "estado/" + $("#ddlpais").val(),
-                    datatype: "json",
-                    success: function (data, textStatus, jqXHR) {
 
-                        $("#ddlestado,#ddlmunicipio,#ddlcolonia").empty();
-                        $("#ddlestado").append("<option value=0 selected>Selecciona un estado</option>");
-                        $.each(data.objects, function (i, estado) {
-                            $("#ddlestado").append("<option value= " + estado.idEstado + "> " + estado.nombre + "</option>");
-                        });
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        alert("no hay nada por cargar :C");
-                    }
+//---------------------------------------------------------------------------------------------
+
+            $("#ddlpais").change(function () {
+                $.get("http://localhost:8080/api/estado/pais/" + $("#ddlpais").val(), function (data) {
+
+                    $("#ddlestado,#ddlmunicipio,#ddlcolonia").empty();
+                    $("#ddlestado").append("<option value=0 selected>Selecciona</option>");
+                    $.each(data.object, function (i, estado) {
+                        $("#ddlestado").append(`<option value="${estado.idEstado}">${estado.nombre}</option>`);
+                    });
                 });
             });
             $("#ddlestado").change(function () {
-                $.ajax({
-                    type: 'GET',
-                    url: "municipio/" + $("#ddlestado").val(),
-                    datatype: "json",
-                    success: function (data, textStatus, jqXHR) {
+                $.get("http://localhost:8080/api/municipio/estado/" + $("#ddlestado").val(), function (data) {
 
-                        $("#ddlmunicipio,#ddlcolonia").empty();
-                        $("#ddlmunicipio").append("<option value=0 selected>Selecciona un municipio</option>");
-                        $.each(data.objects, function (i, municipio) {
-                            $("#ddlmunicipio").append("<option value= " + municipio.idMunicipio + "> " + municipio.nombre + "</option>");
-                        });
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        alert("no hay nada por cargar :C");
-                    }
+                    $("#ddlmunicipio,#ddlcolonia").empty();
+                    $("#ddlmunicipio").append("<option value=0 selected>Selecciona</option>");
+                    $.each(data.object, function (i, municipio) {
+                        $("#ddlmunicipio").append(`<option value="${municipio.idMunicipio}">${municipio.nombre}</option>`);
+                    });
                 });
             });
             $("#ddlmunicipio").change(function () {
-                $.ajax({
-                    type: 'GET',
-                    url: "colonia/" + $("#ddlmunicipio").val(),
-                    datatype: "json",
-                    success: function (data, textStatus, jqXHR) {
+                $.get("http://localhost:8080/api/colonia/municipio/" + $("#ddlmunicipio").val(), function (data) {
 
-                        $("#ddlcolonia").empty();
-                        $("#ddlcolonia").append("<option value=0 selected>Selecciona una colonia </option>");
-                        $.each(data.objects, function (i, colonia) {
-                            $("#ddlcolonia").append("<option value= '" + colonia.idColonia + "' data-cp='" + colonia.codigoPostal + "' > " + colonia.nombre + "</option>");
-                        });
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        alert("no hay nada por cargar :C");
-                    }
+                    $("#ddlcolonia").empty().append("<option value=0 selected>Selecciona</option>");
+                    $.each(data.object, function (i, colonia) {
+                        $("#ddlcolonia").append(`<option value="${colonia.idColonia}" data-cp="${colonia.codigoPostal}">${colonia.nombre}</option>`);
+                    });
                 });
             });
             $("#ddlcolonia").change(function () {
                 let cp = $("#ddlcolonia option:selected").data("cp");
                 $("#txtcp").val(cp || "");
             });
+                
 
+
+//------------------------------------------------------------------------------------------
             function ValidacionTexto(input) {
                 let value = input.value;
-
-                // Permite solo letras, espacios y acentos
                 value = value.replace(/[^A-Za-zñÑáéíóúÁÉÍÓÚ ]/g, "");
-
-                // Evita doble espacio
                 value = value.replace(/\s{2,}/g, " ");
-
-                // Evita espacio al inicio
                 if (value.startsWith(" ")) {
                     value = value.trimStart();
                 }
 
-                // Evita espacio al final mientras escribe
                 if (value.endsWith("  ")) {
                     value = value.trimEnd();
                 }
 
                 input.value = value;
-
-                // Validación final del patrón
                 let RegExp = /^[A-Za-zñÑáéíóúÁÉÍÓÚ]+(\s[A-Za-zñÑáéíóúÁÉÍÓÚ]+)*$/;
-
                 if (value.length === 0) {
                     $(input).removeClass("correct").addClass("error");
                     $(input).siblings(".error-msg").text("Este campo es obligatorio.");
@@ -534,12 +505,10 @@
 
             const fotoInput = document.getElementById("imagenFile");
             const previewImg = document.getElementById('preview');
-
             fotoInput.addEventListener('change', e => {
                 const file = fotoInput.files[0];
                 if (!file)
                     return;
-
                 if (!file.type.startsWith("image/")) {
                     Swal.fire({
                         icon: "error",
@@ -553,15 +522,12 @@
 
                 previewImg.src = URL.createObjectURL(file);
             });
-
-
             let stream;
             const video = document.getElementById("video");
             const canvas = document.getElementById("canvas");
             const captureBtn = document.getElementById("captureBtn");
             const imagenFile = document.getElementById("imagenFile");
-
-// Encender cámara al abrir modal
+// Encender cámara 
             document.getElementById("cameraModal").addEventListener("shown.bs.modal", async () => {
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({
@@ -574,32 +540,26 @@
                     console.error(error);
                 }
             });
-
-// Apagar cámara al cerrar modal
+// Apagar cámara 
             document.getElementById("cameraModal").addEventListener("hidden.bs.modal", () => {
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
             });
-
-// Capturar foto
+// Tomar foto
             captureBtn.addEventListener("click", () => {
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
                 previewImg.src = canvas.toDataURL("image/png");
-
                 canvas.toBlob(blob => {
                     const file = new File([blob], "fotoUser.png", {
                         type: "image/png",
                         lastModified: Date.now()
                     });
-
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
                     imagenFile.files = dataTransfer.files;
                 }, "image/png", 0.6);
-
                 bootstrap.Modal.getInstance(document.getElementById("cameraModal")).hide();
             });
 

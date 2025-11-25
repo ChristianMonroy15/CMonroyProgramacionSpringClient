@@ -272,11 +272,11 @@
                             </div>
 
                             <div class="modal-body bg-light">
-                                
-                                
+
+
                                 <!--Este es el Id 0 de la direccion = <p th:text="${Direccion.IdDireccion}"></p>-->
-                                
-                                
+
+
                                 <form th:object="${Direccion}" id="formDireccion" th:action="@{addDireccion/{idUsuario}(idUsuario = ${usuario.IdUsuario})}" method="post">
                                     <!--<input type="hidden" name="IdUsuario" th:value="${usuario.IdUsuario}">--> 
                                     <input type="hidden" id="idDireccion" name="idDireccion" th:field="*{IdDireccion}">
@@ -382,10 +382,10 @@
                                 <button class="btn btn-secondary btn-sm" onclick="detenerCamara()">Cerrar cámara</button>
                             </div>
 
-                            <!-- Input real -->
+
                             <input type="file" id="fileInput" accept="image/*" class="form-control mt-3" style="display:none">
 
-                            <!-- Botones de acción -->
+                            <!-- Botones -->
                             <div class="mt-3">
                                 <button class="btn btn-primary btn-sm" onclick="document.getElementById('fileInput').click()">
                                     Cargar desde archivo
@@ -413,6 +413,7 @@
                     draggable: true
             });
         </script>
+
         <script th:if="${errorMessage}" th:inline="javascript">
             Swal.fire({
             icon: "error",
@@ -443,11 +444,9 @@
             const canvas = document.getElementById("canvas");
             let stream = null;
             let imagenBase64 = "";
-            // ---- Cargar imagen desde archivo ----
             fileInput.addEventListener("change", (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            // Si abro archivo, apago cámara
             detenerCamara();
             cameraContainer.style.display = "none";
             if (!file.type.startsWith("image/")) {
@@ -469,10 +468,9 @@
             };
             reader.readAsDataURL(file);
             });
-            // ---- Activar cámara ----
             async function activarCamara() {
 
-            // Si abro cámara, borro imagen previa cargada
+
             previewModal.src = "";
             previewModal.style.display = "none";
             fileInput.value = "";
@@ -485,7 +483,7 @@
             }
             }
 
-            // ---- Detener cámara ----
+
             function detenerCamara() {
             if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -494,7 +492,7 @@
             cameraContainer.style.display = "none";
             }
 
-            // ---- Capturar foto ----
+
             function capturarFoto() {
             const ctx = canvas.getContext("2d");
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -535,10 +533,14 @@
 
 
 
+
+
         <script>
             $(document).ready(function () {
 
-            $(".deleteDireccionBtn").click(function () {
+
+            $(document).on("click", ".deleteDireccionBtn", function () {
+
             Swal.fire({
             title: "¿Deseas borrar esta dirección?",
                     text: "No podrás deshacer esta acción",
@@ -548,10 +550,11 @@
                     cancelButtonColor: "#d33",
                     confirmButtonText: "Sí, borrar"
             }).then((result) => {
+
             if (result.isConfirmed) {
 
-            let idDireccion = $(this).attr("data-idDireccion");
-            let idUsuario = $(this).attr("data-idUsuario");
+            let idDireccion = $(this).data("iddireccion");
+            let idUsuario = $(this).data("idusuario");
             $.post("/usuario/deleteDireccion", {
             IdDireccion: idDireccion,
                     IdUsuario: idUsuario
@@ -573,6 +576,7 @@
                             );
                     });
             }
+
             });
             });
             $("#btnAgregarDireccion").click(function () {
@@ -583,75 +587,84 @@
             direccionModal.show();
             rebindDropDownEvents();
             });
-            $(".editDireccionBtn").click(function () {
+            //-----------------------------------------------------------------------------------------
+            $(".editDireccionBtn").click(async function () {
             let idDireccion = $(this).attr("data-idDireccion");
-            $.ajax({
-            url: "/usuario/direccion/" + idDireccion,
-                    method: "GET",
-                    success: function (data) {
-                    $("#idDireccion").val(data.idDireccion || "");
-                    $("#calle").val(data.calle || "");
-                    $("#numeroExterior").val(data.numeroExterior || "");
-                    $("#numeroInterior").val(data.numeroInterior || "");
-                    $("#ddlpais, #ddlestado, #ddlmunicipio").off("change");
-                    $("#ddlpais").val(data.colonia.municipio.estado.pais.idPais);
-                    $.get("estado/" + data.colonia.municipio.estado.pais.idPais, function (estados) {
-                    $("#ddlestado").empty().append("<option value=0>Selecciona</option>");
-                    $.each(estados.objects, function (i, e) {
-                    $("#ddlestado").append(`<option value="${e.idEstado}">${e.nombre}</option>`);
-                    });
-                    $("#ddlestado").val(data.colonia.municipio.estado.idEstado);
-                    $.get("municipio/" + data.colonia.municipio.estado.idEstado, function (municipios) {
-                    $("#ddlmunicipio").empty().append("<option value=0>Selecciona</option>");
-                    $.each(municipios.objects, function (i, m) {
-                    $("#ddlmunicipio").append(`<option value="${m.idMunicipio}">${m.nombre}</option>`);
-                    });
-                    $("#ddlmunicipio").val(data.colonia.municipio.idMunicipio);
-                    $.get("colonia/" + data.colonia.municipio.idMunicipio, function (colonias) {
-                    $("#ddlcolonia").empty().append("<option value=0>Selecciona</option>");
-                    $.each(colonias.objects, function (i, c) {
-                    $("#ddlcolonia").append(`<option value="${c.idColonia}" data-cp="${c.codigoPostal}">${c.nombre}</option>`);
-                    });
-                    $("#ddlcolonia").val(data.colonia.idColonia);
-                    $("#txtcp").val(data.colonia.codigoPostal);
-                    rebindDropDownEvents();
-                    });
-                    });
-                    });
-                    $("#tituloModalDireccion").text("Editar Dirección");
-                    $("#textoBotonDireccion").text("Actualizar Dirección");
-                    var direccionModal = new bootstrap.Modal(document.getElementById('direccionModal'));
-                    direccionModal.show();
-                    },
-                    error: function () {
-                    alert("No se pudo cargar la dirección");
-                    }
+            try {
+            let data = await $.get("http://localhost:8080/api/direccion/" + idDireccion);
+            if (!data.object) {
+            alert("No se encontró la dirección");
+            return;
+            }
+
+            let direccion = data.object;
+            let colonia = direccion.ColoniaJPA;
+            let municipio = colonia.MunicipioJPA;
+            let estado = municipio.EstadoJPA;
+            let pais = estado.PaisJPA;
+            $("#idDireccion").val(direccion.idDireccion || "");
+            $("#calle").val(direccion.calle || "");
+            $("#numeroExterior").val(direccion.numeroExterior || "");
+            $("#numeroInterior").val(direccion.numeroInterior || "");
+            $("#ddlpais, #ddlestado, #ddlmunicipio").off("change");
+            $("#ddlpais").val(pais.idPais);
+            let estados = await $.get("http://localhost:8080/api/estado/pais/" + pais.idPais);
+            $("#ddlestado").empty().append("<option value=0>Selecciona</option>");
+            $.each(estados.object, function (i, e) {
+            $("#ddlestado").append(`<option value="${e.idEstado}">${e.nombre}</option>`);
             });
+            $("#ddlestado").val(estado.idEstado);
+            let municipios = await $.get("http://localhost:8080/api/municipio/estado/" + estado.idEstado);
+            $("#ddlmunicipio").empty().append("<option value=0>Selecciona</option>");
+            $.each(municipios.object, function (i, m) {
+            $("#ddlmunicipio").append(`<option value="${m.idMunicipio}">${m.nombre}</option>`);
             });
+            $("#ddlmunicipio").val(municipio.idMunicipio);
+            let colonias = await $.get("http://localhost:8080/api/colonia/municipio/" + municipio.idMunicipio);
+            $("#ddlcolonia").empty().append("<option value=0>Selecciona</option>");
+            $.each(colonias.object, function (i, c) {
+            $("#ddlcolonia").append(`<option value="${c.idColonia}" data-cp="${c.codigoPostal}">${c.nombre}</option>`);
+            });
+            $("#ddlcolonia").val(colonia.idColonia);
+            $("#txtcp").val(colonia.codigoPostal);
+            rebindDropDownEvents();
+            $("#tituloModalDireccion").text("Editar Dirección");
+            $("#textoBotonDireccion").text("Actualizar Dirección");
+            var direccionModal = new bootstrap.Modal(document.getElementById('direccionModal'));
+            direccionModal.show();
+            } catch (err) {
+            console.error(err);
+            alert("No se pudo cargar la dirección");
+            }
+            });
+// ----------------------- DDL ----------------------------------------------------------------------------------
             function rebindDropDownEvents() {
+
             $("#ddlpais").change(function () {
-            $.get("estado/" + $("#ddlpais").val(), function (data) {
+            $.get("http://localhost:8080/api/estado/pais/" + $("#ddlpais").val(), function (data) {
+
             $("#ddlestado,#ddlmunicipio,#ddlcolonia").empty();
             $("#ddlestado").append("<option value=0 selected>Selecciona</option>");
-            $.each(data.objects, function (i, estado) {
+            $.each(data.object, function (i, estado) {
             $("#ddlestado").append(`<option value="${estado.idEstado}">${estado.nombre}</option>`);
             });
             });
             });
             $("#ddlestado").change(function () {
-            $.get("municipio/" + $("#ddlestado").val(), function (data) {
+            $.get("http://localhost:8080/api/municipio/estado/" + $("#ddlestado").val(), function (data) {
+
             $("#ddlmunicipio,#ddlcolonia").empty();
             $("#ddlmunicipio").append("<option value=0 selected>Selecciona</option>");
-            $.each(data.objects, function (i, municipio) {
+            $.each(data.object, function (i, municipio) {
             $("#ddlmunicipio").append(`<option value="${municipio.idMunicipio}">${municipio.nombre}</option>`);
             });
             });
             });
             $("#ddlmunicipio").change(function () {
-            $.get("colonia/" + $("#ddlmunicipio").val(), function (data) {
-            $("#ddlcolonia").empty();
-            $("#ddlcolonia").append("<option value=0 selected>Selecciona</option>");
-            $.each(data.objects, function (i, colonia) {
+            $.get("http://localhost:8080/api/colonia/municipio/" + $("#ddlmunicipio").val(), function (data) {
+
+            $("#ddlcolonia").empty().append("<option value=0 selected>Selecciona</option>");
+            $.each(data.object, function (i, colonia) {
             $("#ddlcolonia").append(`<option value="${colonia.idColonia}" data-cp="${colonia.codigoPostal}">${colonia.nombre}</option>`);
             });
             });
@@ -661,9 +674,8 @@
             $("#txtcp").val(cp || "");
             });
             }
+
             });
-
-
         </script>
 
     </body>
