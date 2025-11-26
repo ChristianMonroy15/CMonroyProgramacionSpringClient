@@ -7,6 +7,17 @@
         <title>Lista Usuarios</title>
     </head>
     <body layout:fragment="body">
+        <style>
+            .form-check-input.custom-switch:not(:checked) {
+                background-color: #dc3545 !important;
+                border-color: #dc3545 !important;
+            }
+
+            .form-check-input.custom-switch:checked {
+                background-color: #28a745 !important;
+                border-color: #28a745 !important;
+            }
+        </style>
         <div class="container my-4">
             <div class="col bg-primary text-white text-center p-4 rounded shadow">
                 <h1 class="display-5 fw-bold mb-0"> <i class="bi bi-people-fill"></i>Usuarios</h1>
@@ -37,23 +48,33 @@
                                 <input th:field="*{Nombre}" type="text" class="form-control" id="nombre" placeholder="Ingrese nombre">
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="apellidoPaterno" class="form-label fw-semibold">Apellido Paterno</label>
                                 <input th:field="*{ApellidoPaterno}" type="text" class="form-control" id="apellidoPaterno" placeholder="Ingrese apellido paterno">
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="apellidoMaterno" class="form-label fw-semibold">Apellido Materno</label>
                                 <input th:field="*{ApellidoMaterno}" type="text" class="form-control" id="apellidoMaterno" placeholder="Ingrese apellido materno">
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label fw-semibold">Rol</label>
                                 <select th:field="*{Rol.IdRol}" class="form-select">
                                     <option value=0>Seleccione Rol</option>
                                     <option th:each="rol: ${roles}" th:value="${rol.IdRol}" th:text="${rol.Nombre}"></option>
                                 </select>
                             </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Status</label>
+                                <select th:field="*{Status}" class="form-select">
+                                    <option value="">Seleccione status</option>
+                                    <option value="1">Activo</option>
+                                    <option value="0">Inactivo</option>
+                                </select>
+                            </div>
+
                         </div>
 
                         <div class="text-end mt-3">
@@ -64,7 +85,7 @@
                     </form>
 
                 </div>
-            
+
             </div>
 
             <div class="container text-center text-black p-4 rounded shadow my-2">       
@@ -78,9 +99,10 @@
                     <table class="table table-hover table-striped table-bordered border-2 border-dark shadow-sm rounded-3 align-middle">
                         <thead class="bg-info text-white text-center sticky-top">
                             <tr>
-                                <th class="bg-primary text-white col-5" scope="col" Usuario</th>
-                                <th class="bg-primary text-white col-4" scope="col" >Contacto</th>
+                                <th class="bg-primary text-white col-4" scope="col" Usuario</th>
+                                <th class="bg-primary text-white col-3" scope="col" >Contacto</th>
                                 <th class="bg-primary text-white col-2" scope="col" >Rol</th>
+                                <th class="bg-primary text-white col-2" scope="col" >Status </th>
                                 <th class="bg-primary text-white col-1" scope="col" >Acciones</th>
                             </tr>
                         </thead>
@@ -129,6 +151,23 @@
                                     </div>
                                 </td>
 
+                                <td class="text-center align-middle">
+                                    <div class="form-check form-switch d-inline-flex align-items-center gap-3">
+
+                                        <input class="form-check-input custom-switch fs-3"
+                                               type="checkbox"
+                                               th:checked="${usuario.status == 1}"   
+                                               th:data-idusuario="${usuario.IdUsuario}" 
+                                               data-status="${usuario.status}"
+                                               onchange="toggleLabel(this)">
+
+                                        <label class="form-check-label fs-5">
+                                            <span th:text="${usuario.status == 1 ? 'Activo' : 'Inactivo'}"></span>
+                                        </label>
+
+                                    </div>
+                                </td>
+
                                 <td>
                                     <a th:href="@{/usuario/{detail}(detail = ${usuario.IdUsuario})}" role="button" class="btn btn-warning btn-sm me-2 shadow">
                                         <i class="bi bi-pencil-square"></i></i>
@@ -151,13 +190,13 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script th:if="${successMessageAdd}" th:inline="javascript">
-            Swal.fire({
-            position: "top-end",
-                    icon: "success",
-                    title: [[${successMessageAdd}]],
-                    showConfirmButton: false,
-                    timer: 1500
-            });
+                                                   Swal.fire({
+                                                   position: "top-end",
+                                                           icon: "success",
+                                                           title: [[${successMessageAdd}]],
+                                                           showConfirmButton: false,
+                                                           timer: 1500
+                                                   });
         </script>
 
         <script th:inline="javascript">
@@ -193,6 +232,65 @@
             title: "No eliminado!",
                     text: "El usuario no ha sido Eliminado.",
                     icon: "error"
+            });
+            }
+        </script>
+        <script>
+            function toggleLabel(switchElem) {
+
+            const $switch = $(switchElem);
+            const $span = $switch.closest('div').find('label span');
+            const idUsuario = $switch.data("idusuario");
+            const statusOriginal = parseInt($switch.data("status"));
+            const nuevoStatus = $switch.prop("checked") ? 1 : 0;
+            const mensaje = nuevoStatus === 1
+                    ? "¿Quieres activar este usuario?"
+                    : "¿Quieres desactivar este usuario?";
+            const estadoVisualAnterior = !switchElem.checked;
+            Swal.fire({
+            title: "Confirmación",
+                    text: mensaje,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, continuar",
+                    cancelButtonText: "Cancelar",
+            }).then((result) => {
+
+            if (result.isConfirmed) {
+
+            $.ajax({
+            url: "http://localhost:8080/api/usuario/update/status/" + idUsuario + "?status=" + nuevoStatus,
+                    type: "PATCH",
+                    success: function () {
+
+                    if (nuevoStatus === 1) {
+                    $span.text("Activo")
+                    } else {
+                    $span.text("Inactivo")
+                    }
+
+                    $switch.data("status", nuevoStatus);
+                    Swal.fire({
+                    title: "Éxito",
+                            text: "El estado se actualizó correctamente.",
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false
+                    });
+                    },
+                    error: function () {
+                    switchElem.checked = estadoVisualAnterior;
+                    Swal.fire({
+                    title: "Error",
+                            text: "No se pudo actualizar el estado.",
+                            icon: "error",
+                    });
+                    }
+            });
+            } else {
+            switchElem.checked = estadoVisualAnterior;
+            }
+
             });
             }
         </script>

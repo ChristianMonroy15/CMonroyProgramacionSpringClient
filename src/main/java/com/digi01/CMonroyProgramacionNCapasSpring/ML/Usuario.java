@@ -26,7 +26,6 @@ public class Usuario {
     @Size(min = 2, max = 17, message = "El nombre debe contener entre 2 y 17 caracteres")
     private String ApellidoPaterno;
 
-    
     @Size(min = 0, max = 17, message = "El nombre debe contener entre 2 y 17 caracteres")
     private String ApellidoMaterno;
 
@@ -55,8 +54,10 @@ public class Usuario {
 
     @Pattern(regexp = "^(([A-Z][AEIOUX][A-Z]{2}\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])[HM](?:AS|B[CS]|C[CLMSH]|D[FG]|G[TR]|HG|JC|M[CNS]|N[ETL]|OC|PL|Q[TR]|S[PLR]|T[CSL]|VZ|YN|ZS)[B-DF-HJ-NP-TV-Z]{3}[A-Z\\d])(\\d))*$", message = "Ingresa un CURP valido")
     private String Curp;
-    
+
     private String Imagen;
+
+    private Integer Status;
 
     @Valid
     public Rol Rol;
@@ -201,7 +202,14 @@ public class Usuario {
     public void setImagen(String Imagen) {
         this.Imagen = Imagen;
     }
-    
-     
+
+    public Integer getStatus() {
+        return Status;
+    }
+
+    public void setStatus(Integer Status) {
+        this.Status = Status;
+    }
+
 
 }

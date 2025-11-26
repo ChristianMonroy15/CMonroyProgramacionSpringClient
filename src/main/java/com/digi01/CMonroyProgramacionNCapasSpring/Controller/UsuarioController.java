@@ -54,25 +54,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("usuario")
 public class UsuarioController {
 
-    
-
-//    @GetMapping("estado/{idPais}")
-//    @ResponseBody //Retorna dato Estucturado
-//    public Result GetEstadosByIdPais(@PathVariable("idPais") int idPais) {
-//        return estadoDAOImplementation.GetByIdPais(idPais);
-//    }
-//
-//    @GetMapping("municipio/{idEstado}")
-//    @ResponseBody
-//    public Result GetMunicipiosByIdEstado(@PathVariable("idEstado") int idEstado) {
-//        return municipioDAOImplementation.GetByIdEstado(idEstado);
-//    }
-//
-//    @GetMapping("colonia/{idMunicipio}")
-//    @ResponseBody
-//    public Result GetColoniasByIdMunicipio(@PathVariable("idMunicipio") int idMunicipio) {
-//        return coloniaDAOImplementation.GetByIdMunicipio(idMunicipio);
-//    }
     private static final String urlBase = "http://localhost:8080";
 
     @GetMapping()
@@ -100,7 +81,7 @@ public class UsuarioController {
         if (responseEntity.getStatusCode().value() == 200) {
             Result result = responseEntity.getBody();
             model.addAttribute("usuarios", result.object);
-            model.addAttribute("usuariosBusqueda", new Usuario());
+                model.addAttribute("usuariosBusqueda", new Usuario());
 
             Result resultRol = responseEntityRol.getBody();
             model.addAttribute("roles", resultRol.object);
@@ -113,18 +94,6 @@ public class UsuarioController {
         return "UsuarioIndex";
     }
 
-//    @GetMapping()
-//    public String Index(Model model) {
-//        //Result result = usuarioDAOImplementation.GetAll();
-//        List<Usuario> usuarios = usuarioService.GetAll();
-//        //Result resultJPA = usuarioJPADAOImplementation.GetAll();
-//        model.addAttribute("usuarios", usuarios);
-//        model.addAttribute("paises", paisDAOImplementation);
-//        model.addAttribute("roles", rolDAOImplementation.GetAll().objects);
-//
-//        model.addAttribute("usuariosBusqueda", new Usuario());
-//        return "UsuarioIndex";
-//    }
     @PostMapping()
     public String GetAllDinamico(@ModelAttribute("usuariosBusqueda") Usuario usuario, Model model) {
         RestTemplate restTemplate = new RestTemplate();
@@ -206,7 +175,6 @@ public class UsuarioController {
 //        model.addAttribute("paises", paisDAOImplementation.GetAll().objects);
 //        return "UsuarioForm";
 //    }
-//
     @GetMapping("{detail}")
     public String Detail(@PathVariable("detail") int idUsuario,
             Model model) {
@@ -279,7 +247,7 @@ public class UsuarioController {
         return "redirect:/usuario";
     }
 
-    //    @GetMapping("deleteUsuario/{idUsuario}")
+//    @GetMapping("deleteUsuario/{idUsuario}")
 //    public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
 //            Model model,
 //            RedirectAttributes redirectAttributes) {
@@ -303,7 +271,6 @@ public class UsuarioController {
         return responseEntity.getBody().object;
     }
 
-//
 //    @GetMapping("/direccion/{idDireccion}")
 //    @ResponseBody
 //    public Direccion getDireccion(@PathVariable int idDireccion) {
@@ -312,7 +279,6 @@ public class UsuarioController {
 //        //return (Direccion) direccionDAOImplementation.GetById(idDireccion).object;
 //    }
 //
-//}
     @PostMapping("addDireccion/{idUsuario}")
     public String AddDireccion(@ModelAttribute("Direccion") Direccion direccion,
             @PathVariable("idUsuario") int idUsuario,
@@ -397,11 +363,11 @@ public class UsuarioController {
 //        return "redirect:/usuario/" + idUsuario;
 //    }
 //
-//    @GetMapping("/cargamasiva")
-//    public String CargaMasiva() {
-//        return "CargaMasiva";
-//    }
-//
+    @GetMapping("/cargamasiva")
+    public String CargaMasiva() {
+        return "CargaMasiva";
+    }
+
 //    @GetMapping("/cargamasiva/procesar")
 //    public String CargaMasiva(HttpSession session, RedirectAttributes redirectAttributes) {
 //        String path = session.getAttribute("archivoCargaMasiva").toString();
@@ -498,7 +464,7 @@ public class UsuarioController {
             RedirectAttributes redirectAttributes) {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<Usuario> request = new HttpEntity<>(usuario);
-        
+
         ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/" + usuario.getIdUsuario(),
                 HttpMethod.PUT,
                 request,
