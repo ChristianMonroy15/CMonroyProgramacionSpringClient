@@ -50,7 +50,7 @@ public class Usuario {
     private String Celular;
 
     @NotBlank(message = "El campo Username no puede estar vacío")
-    private String Username;
+    private String userName;
 
     @Pattern(regexp = "^(([A-Z][AEIOUX][A-Z]{2}\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])[HM](?:AS|B[CS]|C[CLMSH]|D[FG]|G[TR]|HG|JC|M[CNS]|N[ETL]|OC|PL|Q[TR]|S[PLR]|T[CSL]|VZ|YN|ZS)[B-DF-HJ-NP-TV-Z]{3}[A-Z\\d])(\\d))*$", message = "Ingresa un CURP valido")
     private String Curp;
@@ -68,9 +68,9 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(int IdUsuario, String Username, String Nombre, String ApellidoPaterno, String ApellidoMaterno, String Email, String Password, Date FechaNacimiento, String Sexo, String Telefono, String Celular, String Curp) {
+    public Usuario(int IdUsuario, String UserName, String Nombre, String ApellidoPaterno, String ApellidoMaterno, String Email, String Password, Date FechaNacimiento, String Sexo, String Telefono, String Celular, String Curp) {
         this.IdUsuario = IdUsuario;
-        this.Username = Username;
+        this.userName = UserName;
         this.Nombre = Nombre;
         this.ApellidoPaterno = ApellidoPaterno;
         this.ApellidoMaterno = ApellidoMaterno;
@@ -91,12 +91,12 @@ public class Usuario {
         return IdUsuario;
     }
 
-    public void setUsername(String Username) {
-        this.Username = Username;
+    public void setUserName(String UserName) {
+        this.userName = UserName;
     }
 
-    public String getUsername() {
-        return Username;
+    public String getUserName() {
+        return userName;
     }
 
     public void setNombre(String Nombre) {
