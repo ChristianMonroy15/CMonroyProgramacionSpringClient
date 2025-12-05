@@ -46,16 +46,6 @@ public class UsuarioController {
 
     private static final String urlBase = "http://localhost:8080";
 
-    @PostMapping("/guardarToken")
-    public String guardarToken(@RequestParam("token") String token, HttpSession session) {
-
-        System.out.println("🔥 TOKENSITO GUARDADO EN SESIÓN: " + token);
-
-        session.setAttribute("token", token); // guardar token directamente
-
-        return "redirect:/usuario";
-    }
-
     @GetMapping()
     public String Index(Model model, HttpSession session) {
 
@@ -264,6 +254,62 @@ public class UsuarioController {
         return "UsuarioDetail";
     }
 
+    @GetMapping("/miPerfil")
+    public String miPerfil(Model model, HttpSession session) {
+
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<Usuario>> response = restTemplate.exchange(
+                urlBase + "/api/profile/me",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        }
+        );
+
+        Result<Usuario> result = response.getBody();
+
+        if (result != null && result.correct) {
+
+            ResponseEntity<Result<List<Rol>>> responseRoles
+                    = restTemplate.exchange(
+                            urlBase + "/api/usuario/rol",
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<Result<List<Rol>>>() {
+                    }
+                    );
+
+            ResponseEntity<Result<List<Pais>>> responsePaises
+                    = restTemplate.exchange(
+                            urlBase + "/api/pais",
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<Result<List<Pais>>>() {
+                    }
+                    );
+
+            model.addAttribute("usuario", result.object);
+            model.addAttribute("Direccion", new Direccion());
+            model.addAttribute("roles", responseRoles.getBody().object);
+            model.addAttribute("paises", responsePaises.getBody().object);
+
+            return "UsuarioDetail";
+        }
+
+        return "redirect:/Login";
+    }
+
     @GetMapping("deleteUsuario/{idUsuario}")
     public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
             Model model,
@@ -461,6 +507,8 @@ public class UsuarioController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+                            
         HttpEntity<Usuario> request = new HttpEntity<>(usuario, headers);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -576,7 +624,7 @@ public class UsuarioController {
             }
         }
 
-        HttpEntity<Usuario> requestEntity = new HttpEntity<>(usuario);
+        HttpEntity<Usuario> requestEntity = new HttpEntity<>(usuario, headers);
 
         ResponseEntity<Result<Usuario>> response = restTemplate.exchange(
                 urlBase + "/api/usuario",

@@ -23,7 +23,11 @@
                     <i class="bi bi-person"></i> Detalles del Usuario
                 </h1>
             </div>
-            <div class="col-2 my-4">
+            
+<!--th:if="${session.rol == 'ROLE_Admin'}"-->
+            
+            <div class="col-2 my-4"
+                 >
                 <a th:href="@{/usuario}" role="button" class="btn btn-success shadow">
                     <i class="bi bi-arrow-left"></i> Regresar
                 </a>
@@ -186,7 +190,7 @@
                                                 <input th:field="*{Email}" type="email" class="form-control" id="email" name="email" required>
                                             </div>
                                             <div class="col-md-6">
-                                                    <label for="userName" class="form-label fw-medium">Usuario</label>
+                                                <label for="userName" class="form-label fw-medium">Usuario</label>
                                                 <input th:field="*{userName}" type="text" class="form-control" id="userName" name="userName" required>
                                             </div>
                                             <div class="col-md-6">
@@ -506,13 +510,17 @@
             Swal.fire("Sin imagen", "Debes cargar o tomar una foto.", "warning");
             return;
             }
+            $.get("/token", function(token) {
 
             $.ajax({
             url: "http://localhost:8080/api/usuario/imagen/update/" + [[${usuario.IdUsuario}]],
                     type: "PATCH",
                     contentType: "application/x-www-form-urlencoded",
+                    headers: {
+                    "Authorization": "Bearer " + token
+                    },
                     data: {
-                            imagen: imagenBase64
+                    imagen: imagenBase64
                     },
                     success: function (data) {
                     previewImg.src = imagenBase64;
@@ -527,6 +535,7 @@
                     error: function () {
                     Swal.fire("Error", "No se pudo guardar la imagen", "error");
                     }
+            });
             });
             }
         </script>

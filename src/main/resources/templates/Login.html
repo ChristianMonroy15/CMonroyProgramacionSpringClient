@@ -68,12 +68,36 @@
                                 success: function (response) {
                                     console.log("Token recibido:", response.token);
 
+                                    const token = response.token;
+
                                     $.ajax({
-                                        url: "usuario/guardarToken",
+                                        url: "/guardarToken",
                                         method: "POST",
-                                        data: {token: response.token},
+                                        data: {token: token},
                                         success: function () {
-                                            window.location.href = "/usuario";
+
+                                            const payloadBase64 = token.split(".")[1];
+                                            const payloadJson = atob(payloadBase64);
+                                            const payload = JSON.parse(payloadJson);
+
+                                            const roles = payload.roles || [];
+                                            console.log("Roles en token:", roles);
+
+                                            const normalizedRoles = roles.map(r =>
+                                                r.startsWith("ROLE_") ? r : "ROLE_" + r
+                                            );
+
+                                            const idUsuario = payload.idUsuario;
+                                            console.log("ID usuario:", idUsuario);
+
+                                            if (normalizedRoles.includes("ROLE_Admin")) {
+                                                window.location.href = "/usuario";
+                                            } else {
+                                                window.location.href = "/usuario/"+idUsuario;
+                                            }
+                                        },
+                                        error: function () {
+                                            alert("No se pudo guardar el token en sesión");
                                         }
                                     });
 
@@ -84,6 +108,7 @@
                             });
                         }
         </script>
+
 
 
     </body>

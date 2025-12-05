@@ -17,7 +17,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
             <div class="container-fluid">
 
-                <a class="navbar-brand d-flex align-items-center fw-bold" href="#">
+                <a class="navbar-brand d-flex align-items-center fw-bold">
                     <i class="bi bi-people-fill me-2"></i> Digi01
                 </a>
 
@@ -33,20 +33,23 @@
 
                     <!-- Menú Izquierdo -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                        <li class="nav-item">
+<!--th:if="${session.rol == 'ROLE_Admin'}"-->
+                        <li class="nav-item"
+                             >
                             <a class="nav-link active">
                                 <i class="bi bi-house-door-fill me-1"></i> Inicio
                             </a>
                         </li>
 
-                        <li class="nav-item">
+                        <li class="nav-item"
+                            >
                             <a class="nav-link" th:href="@{/usuario}">
                                 <i class="bi bi-people-fill me-1"></i> Usuarios
                             </a>
                         </li>
 
-                        <li class="nav-item">
+                        <li class="nav-item"
+                            >
                             <a class="nav-link" th:href="@{/usuario/cargamasiva}">
                                 <i class="bi bi-gear-fill me-1"></i> Carga Masiva
                             </a>

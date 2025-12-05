@@ -258,9 +258,14 @@
 
             if (result.isConfirmed) {
 
+
+            $.get("/token", function(token) {
             $.ajax({
             url: "http://localhost:8080/api/usuario/update/status/" + idUsuario + "?status=" + nuevoStatus,
                     type: "PATCH",
+                    headers: {
+                    "Authorization": "Bearer " + token
+                    },
                     success: function () {
 
                     if (nuevoStatus === 1) {
@@ -286,6 +291,7 @@
                             icon: "error",
                     });
                     }
+            });
             });
             } else {
             switchElem.checked = estadoVisualAnterior;
