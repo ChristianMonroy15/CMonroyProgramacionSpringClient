@@ -1,82 +1,131 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
     <head>
-        <title>TODO supply a title</title>
+        <title>Digi01</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <header>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+        <!-- Bootstrap y estilos -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+        <!-- jQuery y SweetAlert -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-            <div class="container-fluid">
 
-                <a class="navbar-brand d-flex align-items-center fw-bold">
-                    <i class="bi bi-people-fill me-2"></i> Digi01
-                </a>
+        <!-- Bootstrap JS (para que exista window.bootstrap) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    </head>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarToggler"
-                        aria-controls="navbarToggler"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+    <body>
 
-                <div class="collapse navbar-collapse" id="navbarToggler">
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+                <div class="container-fluid">
 
-                    <!-- Menú Izquierdo -->
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-<!--th:if="${session.rol == 'ROLE_Admin'}"-->
-                        <li class="nav-item"
-                             >
-                            <a class="nav-link active">
-                                <i class="bi bi-house-door-fill me-1"></i> Inicio
-                            </a>
-                        </li>
+                    <a class="navbar-brand d-flex align-items-center fw-bold">
+                        <i class="bi bi-people-fill me-2"></i> Digi01
+                    </a>
 
-                        <li class="nav-item"
-                            >
-                            <a class="nav-link" th:href="@{/usuario}">
-                                <i class="bi bi-people-fill me-1"></i> Usuarios
-                            </a>
-                        </li>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarToggler">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                        <li class="nav-item"
-                            >
-                            <a class="nav-link" th:href="@{/usuario/cargamasiva}">
-                                <i class="bi bi-gear-fill me-1"></i> Carga Masiva
-                            </a>
-                        </li>
-                    </ul>
+                    <div class="collapse navbar-collapse" id="navbarToggler">
 
-                    <!-- Botón de Logout a la derecha -->
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="btn btn-danger d-flex align-items-center" href="/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
-                            </a>
-                        </li>
-                    </ul>
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <!-- Solo Admin -->
+                            <li class="nav-item admin-only">
+                                <a class="nav-link" th:href="@{/usuario}">
+                                    <i class="bi bi-people-fill me-1"></i> Usuarios
+                                </a>
+                            </li>
 
+                            <li class="nav-item admin-only">
+                                <a class="nav-link" th:href="@{/usuario/cargamasiva}">
+                                    <i class="bi bi-gear-fill me-1"></i> Carga Masiva
+                                </a>
+                            </li>
+                        </ul>
+
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="btn btn-danger d-flex align-items-center" href="/logout">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
                 </div>
+            </nav>
+        </header>
 
-            </div>
-        </nav>
+        <!-- 👇 Aquí se inyecta el contenido de cada vista -->
+        <main layout:fragment="content"></main>
 
+        <footer class="mt-4 text-center text-muted">
+            © Digi01
+        </footer>
 
+        <script>
+            function aplicarPermisosMenu() {
+                const token = sessionStorage.getItem("token");
 
-    </header>
-    <body layout:fragment="body">
-        <div>TODO write content</div>
-    </body> 
-    <footer>
-        @Digi01
-    </footer>
+                if (!token) {
+                    console.warn("No hay token, ocultando opciones de admin.");
+                    $(".admin-only").hide();
+                    return;
+                }
+
+                let payload;
+                try {
+                    payload = JSON.parse(atob(token.split(".")[1]));
+                } catch (e) {
+                    console.error("Error al leer el token:", e);
+                    $(".admin-only").hide();
+                    return;
+                }
+
+                const roles = payload.roles || [];
+                const rolesNormalizados = roles.map(r =>
+                    r.toUpperCase().startsWith("ROLE_")
+                            ? r.toUpperCase()
+                            : "ROLE_" + r.toUpperCase()
+                );
+
+                console.log("Roles normalizados en layout:", rolesNormalizados);
+
+                if (!rolesNormalizados.includes("ROLE_ADMIN")) {
+                    $(".admin-only").hide();
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", aplicarPermisosMenu);
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <script>
+            $(document).ajaxError(function (event, jqXHR, ajaxSettings) {
+
+                if (jqXHR.status === 403 && jqXHR.responseText.includes("Límite de acciones")) {
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Sesión expirada",
+                        text: "Has alcanzado el límite de 5 acciones.\nPor favor inicia sesión nuevamente.",
+                        confirmButtonText: "Aceptar"
+                    }).then(() => {
+                        window.location.href = "/login";
+                    });
+                }
+            });
+        </script>
+
+    </body>
 </html>

@@ -10,11 +10,13 @@ import com.digi01.CMonroyProgramacionNCapasSpring.ML.Result;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.ResultLog;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Rol;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Usuario;
+import com.digi01.CMonroyProgramacionNCapasSpring.Util.RestClientUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Base64;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -43,6 +45,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("usuario")
 public class UsuarioController {
+
 
     private static final String urlBase = "http://localhost:8080";
 
@@ -254,62 +257,6 @@ public class UsuarioController {
         return "UsuarioDetail";
     }
 
-    @GetMapping("/miPerfil")
-    public String miPerfil(Model model, HttpSession session) {
-
-        String token = (String) session.getAttribute("token");
-        if (token == null) {
-            return "redirect:/login";
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-
-        HttpEntity<?> entity = new HttpEntity<>(headers);
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        ResponseEntity<Result<Usuario>> response = restTemplate.exchange(
-                urlBase + "/api/profile/me",
-                HttpMethod.GET,
-                entity,
-                new ParameterizedTypeReference<Result<Usuario>>() {
-        }
-        );
-
-        Result<Usuario> result = response.getBody();
-
-        if (result != null && result.correct) {
-
-            ResponseEntity<Result<List<Rol>>> responseRoles
-                    = restTemplate.exchange(
-                            urlBase + "/api/usuario/rol",
-                            HttpMethod.GET,
-                            entity,
-                            new ParameterizedTypeReference<Result<List<Rol>>>() {
-                    }
-                    );
-
-            ResponseEntity<Result<List<Pais>>> responsePaises
-                    = restTemplate.exchange(
-                            urlBase + "/api/pais",
-                            HttpMethod.GET,
-                            entity,
-                            new ParameterizedTypeReference<Result<List<Pais>>>() {
-                    }
-                    );
-
-            model.addAttribute("usuario", result.object);
-            model.addAttribute("Direccion", new Direccion());
-            model.addAttribute("roles", responseRoles.getBody().object);
-            model.addAttribute("paises", responsePaises.getBody().object);
-
-            return "UsuarioDetail";
-        }
-
-        return "redirect:/Login";
-    }
-
     @GetMapping("deleteUsuario/{idUsuario}")
     public String DeleteUsuario(@PathVariable("idUsuario") int idUsuario,
             Model model,
@@ -508,7 +455,7 @@ public class UsuarioController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
         headers.setContentType(MediaType.APPLICATION_JSON);
-                            
+
         HttpEntity<Usuario> request = new HttpEntity<>(usuario, headers);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -685,4 +632,5 @@ public class UsuarioController {
 
         return "redirect:/usuario/" + idUsuario;
     }
+
 }

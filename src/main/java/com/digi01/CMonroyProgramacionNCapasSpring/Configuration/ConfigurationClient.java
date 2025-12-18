@@ -22,7 +22,8 @@ public class ConfigurationClient {
                         "/css/**",
                         "/js/**",
                         "/img/**",
-                        "/usuario/**"
+                        "/usuario/**",
+                        "/api/resend-verification"
                 ).permitAll()
                 .requestMatchers("/api/usuario/update/status/**").hasRole("Admin")
                 .requestMatchers(

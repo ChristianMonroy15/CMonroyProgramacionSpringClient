@@ -10,6 +10,13 @@
 
     <body>
 
+        <div th:if="${param.verified}">
+            <div class="alert alert-success">
+                Correo verificado correctamente. Ya puedes iniciar sesión.
+            </div>
+        </div>
+
+
         <div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
 
             <div class="card shadow-lg border-0 rounded-4" style="width: 420px;">
@@ -46,70 +53,189 @@
                     </form>
 
                 </div>
+                <div id="verifyBox" class="alert alert-warning mt-3 d-none">
+                    <p class="mb-2 fw-semibold">
+                        Tu cuenta aún no ha sido verificada.
+                    </p>
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm w-100"
+                            onclick="reenviarCorreo(event)">
+                        Reenviar correo de verificación
+                    </button>
+
+                </div>
+
 
             </div>
         </div>
-
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
-                        function login() {
-                            const username = $("#username").val();
-                            const password = $("#password").val();
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    const params = new URLSearchParams(window.location.search);
+                                    if (params.get("expired") === "true") {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Sesión expirada",
+                                            text: "Has alcanzado el límite de acciones, inicia sesión de nuevo."
+                                        });
+                                        sessionStorage.clear();
+                                    }
+                                });
 
-                            $.ajax({
-                                url: "http://localhost:8080/auth/login",
-                                method: "POST",
-                                contentType: "application/json",
-                                data: JSON.stringify({
-                                    username: username,
-                                    password: password
-                                }),
-                                success: function (response) {
-                                    console.log("Token recibido:", response.token);
-
-                                    const token = response.token;
-
-                                    $.ajax({
-                                        url: "/guardarToken",
-                                        method: "POST",
-                                        data: {token: token},
-                                        success: function () {
-
-                                            const payloadBase64 = token.split(".")[1];
-                                            const payloadJson = atob(payloadBase64);
-                                            const payload = JSON.parse(payloadJson);
-
-                                            const roles = payload.roles || [];
-                                            console.log("Roles en token:", roles);
-
-                                            const normalizedRoles = roles.map(r =>
-                                                r.startsWith("ROLE_") ? r : "ROLE_" + r
-                                            );
-
-                                            const idUsuario = payload.idUsuario;
-                                            console.log("ID usuario:", idUsuario);
-
-                                            if (normalizedRoles.includes("ROLE_Admin")) {
-                                                window.location.href = "/usuario";
-                                            } else {
-                                                window.location.href = "/usuario/"+idUsuario;
-                                            }
-                                        },
-                                        error: function () {
-                                            alert("No se pudo guardar el token en sesión");
-                                        }
-                                    });
-
-                                },
-                                error: function () {
-                                    alert("Usuario o contraseña incorrectos");
-                                }
-                            });
-                        }
         </script>
 
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+                                $(document).ready(function () {
+                                    $("#username, #password").on("input", function () {
+                                        $("#verifyBox").addClass("d-none");
+                                    });
+                                });
+        </script>
+        <script>
+            function login() {
+                const username = $("#username").val();
+                const password = $("#password").val();
 
+                $.ajax({
+                    url: "http://localhost:8080/auth/login",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        username: username,
+                        password: password
+                    }),
+                    success: function (response) {
+                        const token = response.token;
 
+                        console.log("Token recibido:", token);
+
+                        sessionStorage.setItem("token", token);
+
+                        $.ajax({
+                            url: "/guardarToken",
+                            method: "POST",
+                            data: {token: token},
+                            success: function () {
+
+                                console.log("Token guardado en HttpSession del backend ✔");
+
+                                const payload = JSON.parse(atob(token.split(".")[1]));
+                                const roles = payload.roles || [];
+                                const idUsuario = payload.idUsuario;
+
+                                console.log("Roles en token:", roles);
+                                console.log("ID usuario:", idUsuario);
+
+                                const normalizedRoles = roles.map(r =>
+                                    r.toUpperCase().startsWith("ROLE_")
+                                            ? r.toUpperCase()
+                                            : "ROLE_" + r.toUpperCase()
+                                );
+
+                                console.log("Roles normalizados:", normalizedRoles);
+
+                                setTimeout(() => {
+                                    if (normalizedRoles.includes("ROLE_ADMIN")) {
+                                        console.log("Redirigiendo a /usuario");
+                                        window.location.href = "/usuario";
+                                    } else {
+                                        console.log("Redirigiendo a /usuario/" + idUsuario);
+                                        window.location.href = "/usuario/" + idUsuario;
+                                    }
+                                }, 150);
+                            },
+                            error: function () {
+                                alert("❌ No se pudo guardar el token en HttpSession");
+                            }
+                        });
+                    },
+                    error: function (xhr) {
+
+                        if (xhr.status === 403 && xhr.responseJSON) {
+
+                            if (xhr.responseJSON.code === "UNVERIFIED_ACCOUNT") {
+
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Cuenta no verificada",
+                                    text: "Debes verificar tu correo para poder iniciar sesión",
+                                    confirmButtonColor: "#0d6efd"
+                                });
+
+                                $("#verifyBox").removeClass("d-none");
+                                return;
+                            }
+
+                        }
+
+                        if (xhr.status === 401) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Credenciales incorrectas",
+                                text: "Usuario o contraseña inválidos",
+                                confirmButtonColor: "#0d6efd"
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "No se pudo iniciar sesión",
+                                confirmButtonColor: "#0d6efd"
+                            });
+                        }
+
+                    }
+
+                });
+            }
+        </script>
+        <script>
+            function reenviarCorreo(event) {
+
+                if (event)
+                    event.preventDefault();
+
+                const username = $("#username").val();
+
+                if (!username) {
+                    alert("Ingresa tu usuario para reenviar el correo.");
+                    return;
+                }
+                Swal.fire({
+                    title: "Enviando correo...",
+                    text: "Por favor espera",
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: "http://localhost:8080/api/resend-verification",
+                    method: "POST",
+                    data: {username: username},
+                    success: function () {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Correo enviado",
+                            text: "Revisa tu bandeja de entrada o spam",
+                            confirmButtonColor: "#0d6efd"
+                        });
+                    },
+                    error: function (xhr) {
+                        console.log("Error status:", xhr.status);
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "No se pudo reenviar el correo de verificación",
+                            confirmButtonColor: "#dc3545"
+                        });
+                    }
+                });
+            }
+
+        </script>
     </body>
 </html>

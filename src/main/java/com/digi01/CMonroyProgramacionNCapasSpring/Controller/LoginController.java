@@ -27,6 +27,9 @@ public class LoginController {
         System.out.println("🔥 TOKENSITO GUARDADO EN SESIÓN: " + token);
         session.setAttribute("token", token);
 
+        session.setAttribute("accionesRestantes", 5);
+        System.out.println("Acciones restantes inicializadas en 5");
+
         return ResponseEntity.ok("OK");
     }
 
