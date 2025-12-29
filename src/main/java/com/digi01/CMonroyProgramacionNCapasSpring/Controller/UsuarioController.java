@@ -1,22 +1,18 @@
 package com.digi01.CMonroyProgramacionNCapasSpring.Controller;
 
+import com.digi01.CMonroyProgramacionNCapasSpring.DTO.ResultLog;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Colonia;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Direccion;
-import com.digi01.CMonroyProgramacionNCapasSpring.ML.ErrorCarga;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Estado;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Municipio;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Pais;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Result;
-import com.digi01.CMonroyProgramacionNCapasSpring.ML.ResultLog;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Rol;
 import com.digi01.CMonroyProgramacionNCapasSpring.ML.Usuario;
-import com.digi01.CMonroyProgramacionNCapasSpring.Util.RestClientUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Base64;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -37,15 +33,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("usuario")
 public class UsuarioController {
-
 
     private static final String urlBase = "http://localhost:8080";
 
@@ -112,17 +105,14 @@ public class UsuarioController {
             Model model,
             HttpSession session) {
 
-        //Recuperar token
         String token = (String) session.getAttribute("token");
         if (token == null) {
             return "redirect:/login";
         }
 
-        //Preparar headers con token
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
-        //Construir request con body + headers
         HttpEntity<Usuario> entity = new HttpEntity<>(usuario, headers);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -137,7 +127,6 @@ public class UsuarioController {
                 }
                 );
 
-        //Obtener roles (también con headers y token)
         HttpEntity<?> emptyWithToken = new HttpEntity<>(headers);
 
         ResponseEntity<Result<List<Rol>>> responseEntityRol
@@ -313,6 +302,21 @@ public class UsuarioController {
         return responseEntity.getBody().object;
     }
 
+    @GetMapping("/cargamasiva")
+    public String CargaMasiva() {
+        return "CargaMasiva";
+    }
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordView() {
+        return "forgot-password";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPasswordView() {
+        return "reset-password";
+    }
+
     @PostMapping("addDireccion/{idUsuario}")
     public String AddDireccion(@ModelAttribute("Direccion") Direccion direccion,
             @PathVariable("idUsuario") int idUsuario,
@@ -374,25 +378,29 @@ public class UsuarioController {
         return "redirect:/usuario/" + idUsuario;
     }
 
-    @GetMapping("/cargamasiva")
-    public String CargaMasiva() {
-        return "CargaMasiva";
-    }
-
     @PostMapping("/cargamasiva")
     public String CargaMasiva(@RequestParam("archivo") MultipartFile archivo,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
 
         if (archivo == null || archivo.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Debes seleccionar un archivo antes de subirlo.");
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Debes seleccionar un archivo antes de subirlo."
+            );
             return "redirect:/usuario/cargamasiva";
         }
 
         try {
+            // 🔐 Token de sesión
+            String tokenSesion = (String) session.getAttribute("token");
+            if (tokenSesion == null) {
+                return "redirect:/login";
+            }
+
             RestTemplate restTemplate = new RestTemplate();
 
+            // Multipart
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
             ByteArrayResource recurso = new ByteArrayResource(archivo.getBytes()) {
@@ -406,6 +414,7 @@ public class UsuarioController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.set("Authorization", "Bearer " + tokenSesion);
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity
                     = new HttpEntity<>(body, headers);
@@ -419,24 +428,96 @@ public class UsuarioController {
 
             ResultLog result = response.getBody();
 
+            // RESPUESTA DEL SERVIDOR
             if (result != null && result.isCorrect()) {
 
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "Archivo subido correctamente se esta validando.");
+                session.setAttribute("tokenCarga", result.getToken());
+                session.setAttribute("idLog", (Integer) result.getIdLog());
 
-                model.addAttribute("idLog", result.getIdLog());
+                // ✅ Archivo válido
+                redirectAttributes.addFlashAttribute("successMessage", result.getMensaje());
+                redirectAttributes.addFlashAttribute("error", false);
 
-                return "redirect:/usuario/cargamasiva";
+                redirectAttributes.addFlashAttribute("tokenCarga", result.getToken());
+                redirectAttributes.addFlashAttribute("idLog", result.getIdLog());
 
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "El servidor no pudo guardar el archivo.");
+
+                // ❌ Archivo con errores
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        result != null ? result.getMensaje() : "Error en validación"
+                );
+                redirectAttributes.addFlashAttribute("error", true);
+
+                if (result != null && result.getErrores() != null) {
+                    redirectAttributes.addFlashAttribute("errores", result.getErrores());
+                }
             }
 
         } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Error al comunicar con el servidor: " + ex.getMessage()
+            );
+        }
+
+        return "redirect:/usuario/cargamasiva";
+    }
+
+    @PostMapping("/cargamasiva/procesar")
+    public String procesarCargaMasiva(
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        String tokenSesion = (String) session.getAttribute("token");
+        String tokenCarga = (String) session.getAttribute("tokenCarga");
+        Integer idLog = (Integer) session.getAttribute("idLog");
+
+        if (tokenSesion == null || tokenCarga == null || idLog == null) {
             redirectAttributes.addFlashAttribute("errorMessage",
-                    "Error al comunicar con el servidor: " + ex.getMessage());
+                    "No hay información válida para procesar.");
             return "redirect:/usuario/cargamasiva";
+        }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + tokenSesion);
+
+            HttpEntity<?> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Result> response = restTemplate.exchange(
+                    urlBase + "/api/cargamasiva/procesar/" + idLog + "/" + tokenCarga,
+                    HttpMethod.POST,
+                    entity,
+                    Result.class
+            );
+
+            Result result = response.getBody();
+
+            if (result != null && result.correct) {
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        "Carga masiva procesada correctamente."
+                );
+
+                session.removeAttribute("tokenCarga");
+                session.removeAttribute("idLog");
+
+            } else {
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        "Error al procesar la carga."
+                );
+            }
+
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Error al procesar dentro de la Base de Datos"
+            );
         }
 
         return "redirect:/usuario/cargamasiva";
@@ -631,6 +712,40 @@ public class UsuarioController {
         }
 
         return "redirect:/usuario/" + idUsuario;
+    }
+
+    @PostMapping("/changePassword")
+    public String ChangePassword(@ModelAttribute("usuario") Usuario usuario,
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
+
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Usuario> request = new HttpEntity<>(usuario, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<Usuario>> responseEntity = restTemplate.exchange(urlBase + "/api/usuario/changePassword/" + usuario.getIdUsuario(),
+                HttpMethod.PATCH,
+                request,
+                new ParameterizedTypeReference<Result<Usuario>>() {
+        });
+
+        if (responseEntity.getBody().correct == true) {
+            redirectAttributes.addFlashAttribute("successMessage", "Se actualizo la contraseña del usuario " + usuario.getUserName());
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "No actualizo la contraseña del usuario " + usuario.getUserName());
+        }
+
+        return "redirect:/usuario/" + usuario.getIdUsuario();
+
     }
 
 }

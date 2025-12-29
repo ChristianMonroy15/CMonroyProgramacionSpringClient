@@ -2,7 +2,7 @@ package com.digi01.CMonroyProgramacionNCapasSpring.ML;
 
 import java.time.LocalDateTime;
 
-public class ResultLog {
+public class LogCargaMasiva {
 
     private boolean correct;
     private String message;

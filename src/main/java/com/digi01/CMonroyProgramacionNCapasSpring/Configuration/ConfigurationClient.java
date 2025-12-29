@@ -23,17 +23,16 @@ public class ConfigurationClient {
                         "/js/**",
                         "/img/**",
                         "/usuario/**",
-                        "/api/resend-verification"
-                ).permitAll()
-                .requestMatchers("/api/usuario/update/status/**").hasRole("Admin")
-                .requestMatchers(
+                        "/api/resend-verification",
+                        "/usuario/forgot-password/**",
                         "/api/direccion/**",
                         "/api/usuario/rol",
                         "/api/pais/**",
                         "/api/estado/**",
                         "/api/municipio/**",
                         "/api/colonia/**"
-                ).authenticated()
+                ).permitAll()
+                .requestMatchers("/api/usuario/update/status/**").hasRole("Admin")
                 .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable());
